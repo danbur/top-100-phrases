@@ -1,4 +1,5 @@
-# A binary min-heap that keeps an additional index of the position of each item in the heap in an associated map
+# A binary min-heap for item-value pairs that keeps an additional index of the position of each item in the heap in an
+# associated map
 package IndexedMinHeap;
 use strict;
 use warnings FATAL => 'all';
@@ -28,21 +29,22 @@ sub is_empty {
 
 # Insert an element to the heap
 sub insert {
-    my ($self, $item) = @_;
+    my ($self, $item, $value) = @_;
     !$self->is_full() || die("Heap is full");
 
     # DEBUG
-    print "Insert $item";
+    print "Insert: $item\n";
 
     # Start at next free leaf
     my $node_num = $self->_num_nodes;
-    $self->{nodes}->[$node_num] = $item;
+    $self->{nodes}->[$node_num] = ItemValue->new($item, $value);
     $self->{item_indexes}->{$item} = $node_num;
 
     # Move up to appropriate level
     $self->_sift_up($node_num);
 
-    print $self->printable;
+    # DEBUG
+    print $self->printable, "\n";
 }
 
 # Returns true if the heap contains the item
@@ -51,12 +53,13 @@ sub contains {
     return exists($self->{item_indexes}->{$item});
 }
 
-# Returns the minimum value of the heap, after removing it
+# Returns the minimum item/value of the heap, after removing it
+# Return type: ItemValue
 sub remove_min {
     my $self = shift;
     !$self->is_empty || die("Heap is empty");
 
-    my $item = $self->{nodes}->[0];
+    my $item_value = $self->{nodes}->[0];
 
     # Shift up last leaf
     $self->{nodes}->[0] = $self->{nodes}->[$self->_last_node];
@@ -66,12 +69,13 @@ sub remove_min {
     $self->_sift_down(0);
 
     # Remove index for item
-    delete($self->{item_indexes}->{$item});
+    delete($self->{item_indexes}->{$item_value->item});
 
-    return $item;
+    return $item_value;
 }
 
-# Returns the minimum value in the heap without removing it
+# Returns the minimum item/value in the heap without removing it
+# Return type: ItemValue
 sub peek {
     my $self = shift;
     !$self->is_empty || die("Heap is empty");
@@ -81,24 +85,23 @@ sub peek {
 # Returns a printable representation of the heap
 sub printable {
     my $self = shift;
-
-    return $self->_printable_node(0);
-}
-
-# Returns all items in the heap from min to max
-sub all_items {
-    my $self = shift;
-    return @{$self->{nodes}};
+    my $printable = "Item indexes:\n";
+    $printable .= join("\n", map { "$_ => " . $self->{'item_indexes'}->{$_}} keys %{$self->{'item_indexes'}}) . "\n";
+    $printable .= "Tree:\n" . "{\n" . $self->_printable_node(0, '  ') . "}";
+    return $printable;
 }
 
 # Move an item that is already in the heap to the correct position, after increasing its value
 sub increase_value() {
-    my($self, $item) = @_;
+    my($self, $item, $value) = @_;
     $self->contains($item) || die("Item is not present in heap");
+    $value >= $self->{nodes}->[$self->{item_indexes}->{$item}]->value || die("New value is less than old");
     # DEBUG
     print ("Increase value for $item\n");
+    $self->{'nodes'}->[$self->{item_indexes}->{$item}] = ItemValue->new($item, $value);
     $self->_sift_up($self->{item_indexes}->{$item});
-    print $self->printable;
+    # DEBUG
+    print $self->printable, "\n";
 }
 
 # Helper functions
@@ -163,12 +166,12 @@ sub _parent {
 sub _swap {
     my ($self, $node1, $node2) = @_;
 
-    my $item1 = $self->{nodes}->[$node1];
-    my $item2 = $self->{nodes}->[$node2];
-    $self->{nodes}->[$node1] = $item2;
-    $self->{nodes}->[$node2] = $item1;
-    $self->{item_indexes}->{$item1} = $node2;
-    $self->{item_indexes}->{$item2} = $node1
+    my $item_value_1 = $self->{nodes}->[$node1];
+    my $item_value_2 = $self->{nodes}->[$node2];
+    $self->{nodes}->[$node1] = $item_value_2;
+    $self->{nodes}->[$node2] = $item_value_1;
+    $self->{item_indexes}->{$item_value_1->item} = $node2;
+    $self->{item_indexes}->{$item_value_2->item} = $node1
 }
 
 # Return the result of the comparator function on two nodes
@@ -176,8 +179,7 @@ sub _swap {
 sub _compare {
     my ($self, $node1, $node2) = @_;
 
-    return $self->{comparator}->compare($self->{nodes}->[$node1],
-        $self->{nodes}->[$node2]);
+    return $self->{comparator}->compare($self->{nodes}->[$node1]->value, $self->{nodes}->[$node2]->value);
 }
 
 # Return the left child of a node
@@ -210,24 +212,24 @@ sub _has_right_child {
 
 # Return a printable representation of the heap below node #node_num
 sub _printable_node {
-    my ($self, $node_num) = @_;
-    my $print = '(';
-
-    $print .= $self->{nodes}->[$node_num];
+    my ($self, $node_num, $prefix) = @_;
+    my $printable = $prefix . "index: $node_num\n";
+    $printable .= $prefix . "item: " . $self->{nodes}->[$node_num]->item . "\n";
+    $printable .= $prefix . "value: " . $self->{nodes}->[$node_num]->value . "\n";
 
     if ($self->_has_left_child($node_num)) {
-        $print .= " L";
-        $print .= $self->_printable_node($self->_left_child($node_num));
+        $printable .= $prefix . "L: {\n";
+        $printable .= $self->_printable_node($self->_left_child($node_num), $prefix . '  ');
+        $printable .= $prefix . "}\n";
     }
 
     if ($self->_has_right_child($node_num)) {
-        $print .= " R";
-        $print .= $self->_printable_node($self->_right_child($node_num));
+        $printable .= $prefix . "R: {\n";
+        $printable .= $self->_printable_node($self->_right_child($node_num), $prefix . '  ');
+        $printable .= $prefix . "}\n";
     }
 
-    $print .= ')';
-
-    return $print;
+    return $printable;
 }
 
 

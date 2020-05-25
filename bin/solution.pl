@@ -11,10 +11,10 @@ my $accumulator = TopNPhrasesAccumulator->new(3, 100);
 
 while (<>) {
     while (/[[:alnum:]]+/g) {
-        $accumulator->add_word($MATCH);
+        $accumulator->add_word(lc($MATCH));
     }
 }
 
 for my $item_count ($accumulator->get_top_phrases()) {
-    print $item_count->count, ' - ', $item_count->item, "\n";
+    print $item_count->value, ' - ', $item_count->item, "\n";
 }

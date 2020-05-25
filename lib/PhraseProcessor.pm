@@ -3,7 +3,7 @@
 package PhraseProcessor;
 use strict;
 use warnings FATAL => 'all';
-use ItemCount;
+use ItemValue;
 
 sub new {
     my ($class, $phrase_length, $process_function) = @_;
