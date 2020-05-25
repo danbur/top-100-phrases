@@ -44,7 +44,7 @@ sub increment_count {
 
 # Returns the top n items from the highest to lowest count.
 # If there are less than n items, this will return all of them.
-# This is a destructive operation and will remove all items from the heap - it can only be done once
+# This is a destructive operation and will remove all items from the heap - it can only be called once
 sub get_top_items {
     my $self = shift;
     my @top_items;

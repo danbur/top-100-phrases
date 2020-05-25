@@ -15,13 +15,9 @@ use TopNItemsByFrequencyAccumulator;
 sub new {
     my ($class, $phrase_length, $count) = @ARG;
     my $accumulator = TopNItemsByFrequencyAccumulator->new($count);
-    my $process_function = sub {
-        my $phrase = shift;
-        $accumulator->increment_count($phrase);
-    };
     my $self = {
         'top_items_accumulator' => $accumulator,
-        'phrase_processor' => PhraseProcessor->new($phrase_length, $process_function)
+        'phrase_processor' => PhraseProcessor->new($phrase_length, sub {$accumulator->increment_count($ARG[0])})
     };
     return bless $self, $class;
 }
@@ -34,7 +30,7 @@ sub add_word {
 
 # Returns the top n phrases in terms of frequency, from the most to least frequent
 # If there are less than n phrases, this will return all of them
-# This a destructive operation - it can only be done once, as it removes all items from the underlying heap
+# This a destructive operation - it can only be called once, as it removes all items from the underlying heap
 sub get_top_phrases {
     my $self = shift;
     return $self->{top_items_accumulator}->get_top_items();

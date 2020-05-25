@@ -95,7 +95,6 @@ sub replace_min() {
     $self->_sift_down(0);
 }
 
-
 # Returns a printable representation of the heap - primarily for diagnostic purposes
 sub printable {
     my $self = shift;
