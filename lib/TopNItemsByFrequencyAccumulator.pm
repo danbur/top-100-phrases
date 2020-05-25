@@ -1,6 +1,6 @@
 # Top n items by frequency accumulator - this is a generic class that increments the count of a series of items and
-# returns the top n items by frequency.  It is implemented using a hash map and a min-heap.
-# TODO: More explanation of the algorithm
+# returns the top n items by frequency.  It is implemented using a binary min-heap with an additional has map containing
+# the position of each item in the heap.
 package TopNItemsByFrequencyAccumulator;
 use strict;
 use warnings FATAL => 'all';
