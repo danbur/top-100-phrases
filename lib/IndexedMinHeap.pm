@@ -91,7 +91,16 @@ sub increase_value() {
     $self->contains($item) || die("Item is not present in heap");
     $value >= $self->{nodes}->[$self->{item_indexes}->{$item}]->value || die("New value is less than old");
     $self->{'nodes'}->[$self->{item_indexes}->{$item}] = ItemValue->new($item, $value);
-    $self->_sift_up($self->{item_indexes}->{$item});
+    $self->_sift_down($self->{item_indexes}->{$item});
+}
+
+# Replace the item with the minimum value with a different item
+sub replace_min() {
+    my($self, $item, $value) = @_;
+    delete($self->{item_indexes}->{$self->{nodes}->[0]->item});
+    $self->{nodes}->[0] = ItemValue->new($item, $value);
+    $self->{item_indexes}->{$item} = 0;
+    $self->_sift_down(0);
 }
 
 # Helper functions

@@ -5,7 +5,6 @@ use English;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use TopNPhrasesAccumulator;
-use Data::Dumper;
 
 my $accumulator = TopNPhrasesAccumulator->new(3, 100);
 

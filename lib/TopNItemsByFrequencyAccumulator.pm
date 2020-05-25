@@ -34,18 +34,16 @@ sub increment_count {
         }
         else {
             # If the heap is full, compare the count to the min item in the heap
-            if ($self->{item_counts}->{$item} > $self->{item_counts}->{$self->{heap}->peek().value}) {
+            if ($self->{item_counts}->{$item} > $self->{heap}->peek()->value) {
                 # Item count is greater than the min item in the heap - remove and replace it
-                # TODO: optimize this
-                $self->{heap}->remove();
-                $self->{heap}->insert($item, $self->{item_counts}->{$item});
+                $self->{heap}->replace_min($item, $self->{item_counts}->{$item});
             }
         }
     }
-
 }
 
 # Returns the top n items from the highest to lowest count
+# This is a destructive operation and will remove all items from the heap - it can only be done once
 sub get_top_items {
     my $self = shift;
     my @top_items;
