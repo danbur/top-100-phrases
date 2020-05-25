@@ -2,9 +2,10 @@
 package ItemValue;
 use strict;
 use warnings FATAL => 'all';
+use English;
 
 sub new {
-    my ($class, $item, $value) = @_;
+    my ($class, $item, $value) = @ARG;
     my $self = { 'item' => $item, 'value' => $value };
     return bless $self, $class;
 }

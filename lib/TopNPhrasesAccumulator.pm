@@ -3,6 +3,7 @@
 package TopNPhrasesAccumulator;
 use strict;
 use warnings FATAL => 'all';
+use English;
 use PhraseProcessor;
 use TopNItemsByFrequencyAccumulator;
 
@@ -12,7 +13,7 @@ use TopNItemsByFrequencyAccumulator;
 #   phrase_length - The phrase length in number of words
 #   count - The number of phrases desired (this will be the number returned by the get_top_phrases method)
 sub new {
-    my ($class, $phrase_length, $count) = @_;
+    my ($class, $phrase_length, $count) = @ARG;
     my $accumulator = TopNItemsByFrequencyAccumulator->new($count);
     my $process_function = sub {
         my $phrase = shift;
@@ -27,11 +28,13 @@ sub new {
 
 # Adds a word to the text
 sub add_word {
-    my ($self, $word) = @_;
+    my ($self, $word) = @ARG;
     $self->{phrase_processor}->add_word($word);
 }
 
 # Returns the top n phrases in terms of frequency, from the most to least frequent
+# If there are less than n phrases, this will return all of them
+# This a destructive operation - it can only be done once, as it removes all items from the underlying heap
 sub get_top_phrases {
     my $self = shift;
     return $self->{top_items_accumulator}->get_top_items();

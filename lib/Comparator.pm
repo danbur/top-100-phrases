@@ -4,7 +4,7 @@ package Comparator;
 
 use strict;
 use warnings FATAL => 'all';
-
+use English;
 
 sub new {
     my $class = shift;

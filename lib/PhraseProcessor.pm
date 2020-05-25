@@ -3,16 +3,17 @@
 package PhraseProcessor;
 use strict;
 use warnings FATAL => 'all';
+use English;
 use ItemValue;
 
 sub new {
-    my ($class, $phrase_length, $process_function) = @_;
+    my ($class, $phrase_length, $process_function) = @ARG;
     my $self = { 'current_phrase' => [], 'phrase_length' => $phrase_length, 'process_function' => $process_function };
     return bless $self, $class;
 }
 
 sub add_word {
-    my ($self, $word) = @_;
+    my ($self, $word) = @ARG;
     # If the current phrase is already the desired length, discard the first word
     if (@{$self->{current_phrase}} == $self->{phrase_length}) {
         shift @{$self->{current_phrase}};

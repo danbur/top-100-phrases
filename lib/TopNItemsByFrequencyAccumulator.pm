@@ -4,11 +4,12 @@
 package TopNItemsByFrequencyAccumulator;
 use strict;
 use warnings FATAL => 'all';
+use English;
 use IndexedMinHeap;
 use Comparator::Num;
 
 sub new {
-    my ($class, $count) = @_;
+    my ($class, $count) = @ARG;
     my $item_counts = {};
     my $self = {
         'count'       => $count,
@@ -20,7 +21,7 @@ sub new {
 
 # Increments the count of an item (or adds it if is absent)
 sub increment_count {
-    my ($self, $item) = @_;
+    my ($self, $item) = @ARG;
     ++$self->{item_counts}->{$item};
     if ($self->{heap}->contains($item)) {
         # Item is already in the heap - update it
@@ -31,8 +32,7 @@ sub increment_count {
         if (!$self->{heap}->is_full()) {
             # If the heap is not full, add it
             $self->{heap}->insert($item, $self->{item_counts}->{$item});
-        }
-        else {
+        } else {
             # If the heap is full, compare the count to the min item in the heap
             if ($self->{item_counts}->{$item} > $self->{heap}->peek()->value) {
                 # Item count is greater than the min item in the heap - remove and replace it
@@ -42,7 +42,8 @@ sub increment_count {
     }
 }
 
-# Returns the top n items from the highest to lowest count
+# Returns the top n items from the highest to lowest count.
+# If there are less than n items, this will return all of them.
 # This is a destructive operation and will remove all items from the heap - it can only be done once
 sub get_top_items {
     my $self = shift;

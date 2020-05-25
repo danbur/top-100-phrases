@@ -3,13 +3,14 @@
 package IndexedMinHeap;
 use strict;
 use warnings FATAL => 'all';
+use English;
 
 # Constructor
 # Takes two arguments
 #   max_size - Maximum heap size
-#   comparator - A comparator of class Comparator
+#   comparator - A value comparator of class Comparator (this is used for ordering items).
 sub new {
-    my ($class, $max_size, $comparator) = @_;
+    my ($class, $max_size, $comparator) = @ARG;
     my $self = { 'nodes' => [], 'max_size' => $max_size, 'item_indexes' => {}, 'comparator' => $comparator };
     return bless $self, $class;
 }
@@ -29,7 +30,7 @@ sub is_empty {
 
 # Insert an element to the heap
 sub insert {
-    my ($self, $item, $value) = @_;
+    my ($self, $item, $value) = @ARG;
     !$self->is_full() || die("Heap is full");
 
     # Start at next free leaf
@@ -43,7 +44,7 @@ sub insert {
 
 # Returns true if the heap contains the item
 sub contains {
-    my ($self, $item) = @_;
+    my ($self, $item) = @ARG;
     return exists($self->{item_indexes}->{$item});
 }
 
@@ -76,18 +77,9 @@ sub peek {
     return $self->{nodes}->[0];
 }
 
-# Returns a printable representation of the heap
-sub printable {
-    my $self = shift;
-    my $printable = "Item indexes:\n";
-    $printable .= join("\n", map { "$_ => " . $self->{'item_indexes'}->{$_}} keys %{$self->{'item_indexes'}}) . "\n";
-    $printable .= "Tree:\n" . "{\n" . $self->_printable_node(0, '  ') . "}";
-    return $printable;
-}
-
 # Move an item that is already in the heap to the correct position, after increasing its value
 sub increase_value() {
-    my($self, $item, $value) = @_;
+    my ($self, $item, $value) = @ARG;
     $self->contains($item) || die("Item is not present in heap");
     $value >= $self->{nodes}->[$self->{item_indexes}->{$item}]->value || die("New value is less than old");
     $self->{'nodes'}->[$self->{item_indexes}->{$item}] = ItemValue->new($item, $value);
@@ -96,18 +88,28 @@ sub increase_value() {
 
 # Replace the item with the minimum value with a different item
 sub replace_min() {
-    my($self, $item, $value) = @_;
+    my ($self, $item, $value) = @ARG;
     delete($self->{item_indexes}->{$self->{nodes}->[0]->item});
     $self->{nodes}->[0] = ItemValue->new($item, $value);
     $self->{item_indexes}->{$item} = 0;
     $self->_sift_down(0);
 }
 
+
+# Returns a printable representation of the heap - primarily for diagnostic purposes
+sub printable {
+    my $self = shift;
+    my $printable = "Item indexes:\n";
+    $printable .= join("\n", map {"$ARG => " . $self->{'item_indexes'}->{$ARG}} keys %{$self->{'item_indexes'}}) . "\n";
+    $printable .= "Tree:\n" . "{\n" . $self->_printable_node(0, '  ') . "}";
+    return $printable;
+}
+
 # Helper functions
 
 # Move a node up recursively to the appropriate position in the heap
 sub _sift_up {
-    my ($self, $node_num) = @_;
+    my ($self, $node_num) = @ARG;
 
     if ($node_num == 0) {
         return;
@@ -122,7 +124,7 @@ sub _sift_up {
 
 # Move a node down recursively to the appropriate position in the heap (
 sub _sift_down {
-    my ($self, $node_num) = @_;
+    my ($self, $node_num) = @ARG;
     my $lowest = $node_num;
 
     if ($self->_has_left_child($node_num) && $self->_compare($self->_left_child($node_num), $lowest) < 0) {
@@ -155,7 +157,7 @@ sub _last_node {
 sub _parent {
     use integer;
 
-    my $node_num = $_[1];
+    my $node_num = $ARG[1];
 
     return ($node_num + 1) / 2 - 1;
 }
@@ -163,7 +165,7 @@ sub _parent {
 # Swap two nodes
 # Takes two node numbers as arguments
 sub _swap {
-    my ($self, $node1, $node2) = @_;
+    my ($self, $node1, $node2) = @ARG;
 
     my $item_value_1 = $self->{nodes}->[$node1];
     my $item_value_2 = $self->{nodes}->[$node2];
@@ -176,42 +178,42 @@ sub _swap {
 # Return the result of the comparator function on two nodes
 # Takes two node numbers as arguments
 sub _compare {
-    my ($self, $node1, $node2) = @_;
+    my ($self, $node1, $node2) = @ARG;
 
     return $self->{comparator}->compare($self->{nodes}->[$node1]->value, $self->{nodes}->[$node2]->value);
 }
 
 # Return the left child of a node
 sub _left_child {
-    my $node_num = $_[1];
+    my $node_num = $ARG[1];
 
     return 2 * ($node_num + 1) - 1;
 }
 
 # Return the right child of a node
 sub _right_child {
-    my $node_num = $_[1];
+    my $node_num = $ARG[1];
 
     return 2 * ($node_num + 1);
 }
 
 # Returns true if a node has a left child
 sub _has_left_child {
-    my ($self, $node_num) = @_;
+    my ($self, $node_num) = @ARG;
 
     return $self->_left_child($node_num) < $self->_num_nodes;
 }
 
 # Return true if a node has a right child
 sub _has_right_child {
-    my ($self, $node_num) = @_;
+    my ($self, $node_num) = @ARG;
 
     return $self->_right_child($node_num) < $self->_num_nodes;
 }
 
 # Return a printable representation of the heap below node #node_num
 sub _printable_node {
-    my ($self, $node_num, $prefix) = @_;
+    my ($self, $node_num, $prefix) = @ARG;
     my $printable = $prefix . "index: $node_num\n";
     $printable .= $prefix . "item: " . $self->{nodes}->[$node_num]->item . "\n";
     $printable .= $prefix . "value: " . $self->{nodes}->[$node_num]->value . "\n";
