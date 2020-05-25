@@ -32,9 +32,6 @@ sub insert {
     my ($self, $item, $value) = @_;
     !$self->is_full() || die("Heap is full");
 
-    # DEBUG
-    print "Insert: $item\n";
-
     # Start at next free leaf
     my $node_num = $self->_num_nodes;
     $self->{nodes}->[$node_num] = ItemValue->new($item, $value);
@@ -42,9 +39,6 @@ sub insert {
 
     # Move up to appropriate level
     $self->_sift_up($node_num);
-
-    # DEBUG
-    print $self->printable, "\n";
 }
 
 # Returns true if the heap contains the item
@@ -96,12 +90,8 @@ sub increase_value() {
     my($self, $item, $value) = @_;
     $self->contains($item) || die("Item is not present in heap");
     $value >= $self->{nodes}->[$self->{item_indexes}->{$item}]->value || die("New value is less than old");
-    # DEBUG
-    print ("Increase value for $item\n");
     $self->{'nodes'}->[$self->{item_indexes}->{$item}] = ItemValue->new($item, $value);
     $self->_sift_up($self->{item_indexes}->{$item});
-    # DEBUG
-    print $self->printable, "\n";
 }
 
 # Helper functions
