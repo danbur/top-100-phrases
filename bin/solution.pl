@@ -5,6 +5,7 @@ use English;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 use TopNPhrasesAccumulator;
+use Data::Dumper;
 
 my $accumulator = TopNPhrasesAccumulator->new(3, 100);
 
@@ -14,6 +15,6 @@ while (<>) {
     }
 }
 
-for my $item_count (@{$accumulator->get_top_phrases()}) {
+for my $item_count ($accumulator->get_top_phrases()) {
     print $item_count->count, ' - ', $item_count->item, "\n";
 }

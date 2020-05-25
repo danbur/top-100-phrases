@@ -21,23 +21,34 @@ sub new {
 # Increments the count of an item (or adds it if is absent)
 sub increment_count {
     my ($self, $item) = @_;
-    # DEBUG
-    print "$item\n";
     ++$self->{item_counts}->{$item};
     if ($self->{heap}->contains($item)) {
-        # Item is already in the heap
-        # TODO
+        # Item is already in the heap - update it
+        $self->{heap}->increase_value($item);
     }
     else {
-        # Item is not in the heap - add it
-        $self->{heap}->insert($item);
+        # Item is not in the heap
+        if (!$self->{heap}->is_full()) {
+            # If the heap is not full, add it
+            $self->{heap}->insert($item);
+        }
+        else {
+            # If the heap is full, compare the count to the min item in the heap
+            if ($self->{item_counts}->{$item} > $self->{item_counts}->{$self->{heap}->peek()}) {
+                # Item count is greater than the min item in the heap - remove and replace it
+                # TODO: optimize this
+                $self->{heap}->remove();
+                $self->{heap}->insert($item);
+            }
+        }
     }
 
 }
 
+# Returns the top n items from the highest to lowest count
 sub get_top_items {
-    # TODO
-    return [ ItemCount->new('foo bar baz', 2), ItemCount->new('quick brown fox', 3), ItemCount->new('fold over this', 1) ];
+    my $self = shift;
+    return reverse map {ItemCount->new($_, $self->{item_counts}->{$_})} $self->{heap}->all_items();
 }
 
 1;

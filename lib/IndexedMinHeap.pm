@@ -1,4 +1,4 @@
-# A binary min-heap that also keeps the array index of each item in an associated map
+# A binary min-heap that keeps an additional index of the position of each item in the heap in an associated map
 package IndexedMinHeap;
 use strict;
 use warnings FATAL => 'all';
@@ -19,37 +19,51 @@ sub is_full {
     return @{$self->{nodes}} == $self->{max_size};
 }
 
+# Returns true if heap is empty
+sub is_empty {
+    my $self = shift;
+
+    return !$self->_num_nodes;
+}
+
 # Insert an element to the heap
 sub insert {
-    my ($self, $element) = @_;
+    my ($self, $item) = @_;
     !$self->is_full() || die("Heap is full");
 
+    # DEBUG
+    print "Insert $item";
+
     # Start at next free leaf
-    my $nodeNum = $self->numNodes;
-    $self->{nodes}->[$nodeNum] = $element;
-    $self->{item_indexes}->{$element} = $nodeNum;
+    my $node_num = $self->_num_nodes;
+    $self->{nodes}->[$node_num] = $item;
+    $self->{item_indexes}->{$item} = $node_num;
 
     # Move up to appropriate level
-    $self->siftUp($nodeNum);
+    $self->_sift_up($node_num);
+
+    print $self->printable;
 }
 
 # Returns true if the heap contains the item
 sub contains {
     my ($self, $item) = @_;
-    return exists($self->{heap_indexes}->{$item});
+    return exists($self->{item_indexes}->{$item});
 }
 
-# Remove the top node and return it
-sub remove {
+# Returns the minimum value of the heap, after removing it
+sub remove_min {
     my $self = shift;
+    !$self->is_empty || die("Heap is empty");
+
     my $item = $self->{nodes}->[0];
 
     # Shift up last leaf
-    $self->{nodes}->[0] = $self->{nodes}->[$self->lastNode];
-    delete($self->{nodes}->[$self->lastNode]);
+    $self->{nodes}->[0] = $self->{nodes}->[$self->_last_node];
+    delete($self->{nodes}->[$self->_last_node]);
 
     # Move down to appropriate level
-    $self->siftDown(0);
+    $self->_sift_down(0);
 
     # Remove index for item
     delete($self->{item_indexes}->{$item});
@@ -57,73 +71,96 @@ sub remove {
     return $item;
 }
 
+# Returns the minimum value in the heap without removing it
+sub peek {
+    my $self = shift;
+    !$self->is_empty || die("Heap is empty");
+    return $self->{nodes}->[0];
+}
+
 # Returns a printable representation of the heap
 sub printable {
     my $self = shift;
 
-    return $self->printable_node(0);
+    return $self->_printable_node(0);
+}
+
+# Returns all items in the heap from min to max
+sub all_items {
+    my $self = shift;
+    return @{$self->{nodes}};
+}
+
+# Move an item that is already in the heap to the correct position, after increasing its value
+sub increase_value() {
+    my($self, $item) = @_;
+    $self->contains($item) || die("Item is not present in heap");
+    # DEBUG
+    print ("Increase value for $item\n");
+    $self->_sift_up($self->{item_indexes}->{$item});
+    print $self->printable;
 }
 
 # Helper functions
 
 # Move a node up recursively to the appropriate position in the heap
-sub siftUp {
-    my ($self, $nodeNum) = @_;
+sub _sift_up {
+    my ($self, $node_num) = @_;
 
-    if ($nodeNum == 0) {
+    if ($node_num == 0) {
         return;
     }
 
-    my $parent = $self->parent($nodeNum);
-    if ($self->compare($nodeNum, $parent) < 0) {
-        $self->swap($nodeNum, $parent);
-        $self->siftUp($parent);
+    my $parent = $self->_parent($node_num);
+    if ($self->_compare($node_num, $parent) < 0) {
+        $self->_swap($node_num, $parent);
+        $self->_sift_up($parent);
     }
 }
 
 # Move a node down recursively to the appropriate position in the heap (
-sub siftDown {
-    my ($self, $nodeNum) = @_;
-    my $lowest = $nodeNum;
+sub _sift_down {
+    my ($self, $node_num) = @_;
+    my $lowest = $node_num;
 
-    if ($self->hasLeftChild($nodeNum) && $self->compare($self->leftChild($nodeNum), $lowest) < 0) {
-        $lowest = $self->leftChild($nodeNum);
+    if ($self->_has_left_child($node_num) && $self->_compare($self->_left_child($node_num), $lowest) < 0) {
+        $lowest = $self->_left_child($node_num);
     }
-    if ($self->hasRightChild($nodeNum) && $self->compare($self->rightChild($nodeNum), $lowest) < 0) {
-        $lowest = $self->rightChild($nodeNum);
+    if ($self->_has_right_child($node_num) && $self->_compare($self->_right_child($node_num), $lowest) < 0) {
+        $lowest = $self->_right_child($node_num);
     }
-    if ($lowest != $nodeNum) {
-        $self->swap($nodeNum, $lowest);
-        $self->siftDown($lowest);
+    if ($lowest != $node_num) {
+        $self->_swap($node_num, $lowest);
+        $self->_sift_down($lowest);
     }
 }
 
 # Return the number of nodes
-sub numNodes {
+sub _num_nodes {
     my $self = shift;
 
     return scalar @{$self->{nodes}};
 }
 
 # Return the index of the last node
-sub lastNode {
+sub _last_node {
     my $self = shift;
 
-    return $self->numNodes - 1;
+    return $self->_num_nodes - 1;
 }
 
 # Return the parent node number of a node
-sub parent {
+sub _parent {
     use integer;
 
-    my $nodeNum = $_[1];
+    my $node_num = $_[1];
 
-    return ($nodeNum + 1) / 2 - 1;
+    return ($node_num + 1) / 2 - 1;
 }
 
 # Swap two nodes
 # Takes two node numbers as arguments
-sub swap {
+sub _swap {
     my ($self, $node1, $node2) = @_;
 
     my $item1 = $self->{nodes}->[$node1];
@@ -136,7 +173,7 @@ sub swap {
 
 # Return the result of the comparator function on two nodes
 # Takes two node numbers as arguments
-sub compare {
+sub _compare {
     my ($self, $node1, $node2) = @_;
 
     return $self->{comparator}->compare($self->{nodes}->[$node1],
@@ -144,48 +181,48 @@ sub compare {
 }
 
 # Return the left child of a node
-sub leftChild {
-    my $nodeNum = $_[1];
+sub _left_child {
+    my $node_num = $_[1];
 
-    return 2 * ($nodeNum + 1) - 1;
+    return 2 * ($node_num + 1) - 1;
 }
 
 # Return the right child of a node
-sub rightChild {
-    my $nodeNum = $_[1];
+sub _right_child {
+    my $node_num = $_[1];
 
-    return 2 * ($nodeNum + 1);
+    return 2 * ($node_num + 1);
 }
 
 # Returns true if a node has a left child
-sub hasLeftChild {
-    my ($self, $nodeNum) = @_;
+sub _has_left_child {
+    my ($self, $node_num) = @_;
 
-    return $self->leftChild($nodeNum) < $self->numNodes;
+    return $self->_left_child($node_num) < $self->_num_nodes;
 }
 
 # Return true if a node has a right child
-sub hasRightChild {
-    my ($self, $nodeNum) = @_;
+sub _has_right_child {
+    my ($self, $node_num) = @_;
 
-    return $self->rightChild($nodeNum) < $self->numNodes;
+    return $self->_right_child($node_num) < $self->_num_nodes;
 }
 
-# Return a printable representation of the heap below node #nodeNum
-sub printable_node {
-    my ($self, $nodeNum) = @_;
+# Return a printable representation of the heap below node #node_num
+sub _printable_node {
+    my ($self, $node_num) = @_;
     my $print = '(';
 
-    $print .= $self->{nodes}->[$nodeNum];
+    $print .= $self->{nodes}->[$node_num];
 
-    if ($self->hasLeftChild($nodeNum)) {
+    if ($self->_has_left_child($node_num)) {
         $print .= " L";
-        $print .= $self->printable_node($self->leftChild($nodeNum));
+        $print .= $self->_printable_node($self->_left_child($node_num));
     }
 
-    if ($self->hasRightChild($nodeNum)) {
+    if ($self->_has_right_child($node_num)) {
         $print .= " R";
-        $print .= $self->printable_node($self->rightChild($nodeNum));
+        $print .= $self->_printable_node($self->_right_child($node_num));
     }
 
     $print .= ')';

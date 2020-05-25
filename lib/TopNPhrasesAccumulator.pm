@@ -25,11 +25,13 @@ sub new {
     return bless $self, $class;
 }
 
+# Adds a word to the text
 sub add_word {
     my ($self, $word) = @_;
     $self->{phrase_processor}->add_word($word);
 }
 
+# Returns the top n phrases in terms of frequency, from the most to least frequent
 sub get_top_phrases {
     my $self = shift;
     return $self->{top_items_accumulator}->get_top_items();
